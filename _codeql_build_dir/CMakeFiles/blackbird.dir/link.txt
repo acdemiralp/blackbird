@@ -1,0 +1,1 @@
+/home/runner/work/blackbird/.codeql-scratch/dbs/cpp/working/autobuild/bin/c++ -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/blackbird.dir/link.d CMakeFiles/blackbird.dir/main.cpp.o -o blackbird
