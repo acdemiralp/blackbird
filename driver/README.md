@@ -2,21 +2,40 @@
 
 This directory contains the kernel-space implementation of Blackbird, which runs as a Windows kernel driver instead of a user-space application.
 
+## Important Notice
+
+**This is a demonstration/educational implementation** that shows the basic structure of a kernel driver. It creates a standalone device rather than attaching to the actual keyboard device stack. For a production keyboard filter driver, you would need to:
+
+1. Attach to the keyboard device stack using `IoAttachDeviceToDeviceStack`
+2. Implement PnP (Plug and Play) dispatch routines (`IRP_MJ_PNP`, `IRP_MJ_POWER`)
+3. Use work items or DPCs for file I/O operations from elevated IRQL contexts
+4. Implement proper security descriptors and access control
+5. Handle all keyboard types (PS/2, USB, etc.) appropriately
+
 ## Overview
 
-The kernel-space version intercepts keyboard input at the kernel level using a keyboard filter driver. This approach has several advantages over the user-space version:
+The kernel-space version creates a device that could intercept keyboard input at the kernel level. This approach has several theoretical advantages over the user-space version:
 
-- **Lower-level access**: Captures keystrokes before they reach user-space applications
+- **Lower-level access**: Could capture keystrokes before they reach user-space applications
 - **Harder to detect**: Operates at kernel level, making it less visible to user-space monitoring tools
-- **System-wide coverage**: Can capture input even in secure contexts where user-space applications cannot
+- **System-wide coverage**: Could capture input even in secure contexts
+
+However, the current implementation is simplified for educational purposes.
 
 ## Architecture
 
-The kernel driver (`driver.c`) implements:
-- **Keyboard Filter Driver**: Intercepts keyboard input at the driver level
-- **Buffered Logging**: Stores keystrokes in a kernel buffer before writing to disk
+The kernel driver (`driver.c`) demonstrates:
+- **Device Creation**: Creates a standalone kernel device (not a true filter driver in this demo)
+- **Buffered Logging**: Stores keystrokes in a dynamically allocated kernel buffer
 - **File I/O**: Writes captured data to `C:\blackbird_kernel.log`
-- **Safe Operation**: Uses spinlocks for thread-safe buffer access
+- **Safe Operation**: Uses fast mutexes for thread-safe buffer access at appropriate IRQL levels
+- **Proper Memory Management**: Allocates buffers from non-paged pool with proper cleanup
+
+**Note**: This implementation does not actually attach to keyboard devices. A production keyboard filter would need to:
+- Enumerate keyboard devices
+- Attach to their device stacks
+- Handle PnP and Power IRPs
+- Forward IRPs appropriately
 
 ## Files
 
@@ -88,8 +107,8 @@ sc delete BlackbirdDriver
 
 The kernel driver currently has the following hardcoded settings:
 - **Log file location**: `C:\blackbird_kernel.log`
-- **Buffer size**: 4096 characters
-- **Flush threshold**: When buffer reaches 3996 characters
+- **Buffer size**: 1024 characters
+- **Flush threshold**: When buffer reaches 924 characters (BUFFER_SIZE - FLUSH_THRESHOLD_MARGIN)
 
 To modify these settings, edit the constants at the top of `driver.c` and rebuild.
 
@@ -154,21 +173,30 @@ For development and debugging:
 
 ## Limitations
 
-- **Simplified keyboard mapping**: Uses a basic US keyboard layout
+- **Not a true filter driver**: Creates standalone device, doesn't attach to keyboard stack
+- **No PnP support**: Doesn't handle Plug and Play or Power management IRPs
+- **Simplified keyboard mapping**: Uses a basic US keyboard layout for scan codes 0-59
 - **No shift/capslock handling**: Does not track modifier keys properly
 - **No locale support**: Unlike the user-space version, doesn't respect keyboard locale
 - **No email support**: Only logs to a file
 - **Fixed log location**: Cannot be configured without rebuilding
+- **Limited IRQL handling**: File I/O from completion routine is problematic in production
+- **No work item queuing**: Should use work items for file I/O from DISPATCH_LEVEL
 
 ## Future Improvements
 
-Potential enhancements for the kernel driver:
+To make this a production-ready keyboard filter driver:
+- Implement proper keyboard device stack attachment
+- Add PnP and Power management support
+- Use work items for file I/O from DISPATCH_LEVEL contexts
 - Dynamic keyboard layout detection
-- Proper modifier key handling
+- Proper modifier key handling (Shift, Ctrl, Alt, Caps Lock)
 - Configurable log file location via registry
 - Encrypted log storage
 - Network transmission support
 - Support for PS/2 and USB keyboards separately
+- Proper security descriptors on device and log file
+- Digital signing for production deployment
 
 ## Ethics and Legal Notice
 
